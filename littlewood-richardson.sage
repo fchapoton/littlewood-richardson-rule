@@ -203,6 +203,33 @@ class CohomologyPartialFlagVariety:
 
         return element_one.leading_coefficient()*element_two.leading_coefficient()*output
 
+    def poincare_dual(self, element):
+
+        # check input
+
+        # if element is zero we are done
+        if element.is_zero():
+            return self.module.zero()
+
+        # if element is a sum of at least two monomials we recurse
+        if len(element.monomials()) > 1:
+            term = element.leading_term()
+            return self.poincare_dual(term) + self.poincare_dual(element - term)
+
+        for w in self.schubert_basis:
+            if w.length() == self.dimension - element.leading_support().length():
+                if self.cup_product(element.leading_monomial(), self.module.monomial(w)) == self.point_class:
+                    output = element.leading_coefficient()*self.module.monomial(w)
+
+        return output
+
+
+
+
+
+
+
+
 
 # precomputed Schubert bases for complicated examples
 precomputed = dict()
