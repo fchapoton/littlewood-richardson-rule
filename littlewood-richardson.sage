@@ -25,6 +25,13 @@ class CohomologyPartialFlagVariety:
 
         self.module = CombinatorialFreeModule(base, self.schubert_basis)
 
+        self.dimension = max(w.length() for w in self.schubert_basis)
+
+        for w in self.schubert_basis:
+            if w.length() == self.dimension:
+                self.point_class = self.module.monomial(w)
+
+
 
     def __repr__(self):
         """Description of the cohomology ring"""
