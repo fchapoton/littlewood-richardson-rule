@@ -224,9 +224,21 @@ class CohomologyPartialFlagVariety:
 
         return output
 
+    def schubert_to_roots(self, input):
 
+        # check input, either an element of the schubert basis or a root
 
+        # make sure it is simly laced and adjoint variety
 
+        theta = self.root_lattice.highest_root()
+        schubert_to_roots = dict([tuple([w,w.action(theta)]) for w in self.schubert_basis])
+        roots_to_schubert = dict([tuple([w.action(theta),w]) for w in self.schubert_basis])
+
+        if input in self.schubert_basis:
+            return schubert_to_roots.get(input)
+
+        if input in self.root_lattice:
+            return roots_to_schubert.get(input)
 
 
 
