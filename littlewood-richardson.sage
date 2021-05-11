@@ -240,6 +240,33 @@ class CohomologyPartialFlagVariety:
         if input in self.root_lattice:
             return roots_to_schubert.get(input)
 
+    def to_roots(self, element):
+
+        # check input
+        # make sure it is simly laced and adjoint variety
+
+        if element.is_zero():
+            return {}
+
+        if len(element.monomials()) > 1:
+            term = element.leading_term()
+            return {**self.to_roots(element - term), **self.to_roots(term)}
+
+        return {tuple(self.schubert_to_roots(element.leading_support()).dense_coefficient_list()) : element.leading_coefficient()}
+
+    def to_schubert(self, input_dict):
+
+        # check input
+        # make sure it is simly laced and adjoint variety
+
+        output = self.module.zero()
+
+        for item in input_dict:
+            output = output + input_dict.get(item)*self.module.monomial(self.schubert_to_roots(sum(item[i]*self.root_lattice.simple_root(i+1) for i in range(len(item)))))
+
+        return output
+
+
 
 
 
