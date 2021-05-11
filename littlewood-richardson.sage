@@ -266,9 +266,43 @@ class CohomologyPartialFlagVariety:
 
         return output
 
+    # computing the preimage under the multiplication by the hyperplane class
+    # input must be homogeneous
+    # only maximal parabolics are allowed at the moment
+    def inverse_lefschetz_map(self, element):
 
+        assert len(self.parabolic) == 1, 'The parabolic subgroup is not maximal'
 
+        hyperplane_class = self.module.monomial(self.weyl_group.from_reduced_word([self.parabolic[0]]))
 
+        assert all(monomial.leading_support().length() == element.leading_monomial().leading_support().length() for monomial in element.monomials()), 'Input is not homogenous'
+
+        # multiplication by the hyperplane class goes from subspace_A to subspace_B
+        subspace_A = [w for w in self.schubert_basis if w.length() == element.leading_support().length() - 1]
+        subspace_B = [w for w in self.schubert_basis if w.length() == element.leading_support().length()]
+
+        L = matrix(QQ, len(subspace_B), len(subspace_A))
+
+        assert L.right_kernel().dimension() != 0, 'Multiplication by the hyperplane class has non-trivial kernel'
+        assert len(subspace_A) == len(subspace_B), 'The cohomology groups, you are applying the Hard Lefschetz to, have different dimensions. This is not yet implemented.'
+
+        for w in subspace_A:
+            product = self.cup_product(self.module.monomial(w), hyperplane_class)
+            for v in subspace_B:
+                L[subspace_B.index(v), subspace_A.index(w)] = product.monomial_coefficients().get(v)
+
+        element_to_matrix = matrix(QQ, len(subspace_B), 1)
+        for v in subspace_B:
+            element_to_matrix[subspace_B.index(v), 0] = element.monomial_coefficients().get(v)
+
+        output_matrix = L^-1*element_to_matrix
+
+        output = self.module.zero()
+
+        for w in subspace_A:
+            output = output + output_matrix[subspace_A.index(w),0]*self.module.monomial(w)
+
+        return output
 
 
 # precomputed Schubert bases for complicated examples
