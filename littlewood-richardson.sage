@@ -281,26 +281,35 @@ class CohomologyPartialFlagVariety:
         subspace_A = [w for w in self.schubert_basis if w.length() == element.leading_support().length() - 1]
         subspace_B = [w for w in self.schubert_basis if w.length() == element.leading_support().length()]
 
+        # matrix of multiplication by the hyperplane class in the Schubert basis
         L = matrix(QQ, len(subspace_B), len(subspace_A))
 
         assert L.right_kernel().dimension() != 0, 'Multiplication by the hyperplane class has non-trivial kernel'
-        assert len(subspace_A) == len(subspace_B), 'The cohomology groups, you are applying the Hard Lefschetz to, have different dimensions. This is not yet implemented.'
 
         for w in subspace_A:
             product = self.cup_product(self.module.monomial(w), hyperplane_class)
             for v in subspace_B:
                 L[subspace_B.index(v), subspace_A.index(w)] = product.monomial_coefficients().get(v)
 
+        # image of L as a vectorspace
+        image = span(L.columns(),QQ)
+
+        # converting input into a matrix
         element_to_matrix = matrix(QQ, len(subspace_B), 1)
         for v in subspace_B:
             element_to_matrix[subspace_B.index(v), 0] = element.monomial_coefficients().get(v)
 
-        output_matrix = L^-1*element_to_matrix
+        # base change matrix between the basis of image induced by subspace_A and its basis given by Sage
+        P = matrix(QQ, len(subspace_A), len(subspace_A))
+
+        for i in range(len(subspace_A)):
+            for j in range(len(subspace_A)):
+                P[j,i] = image.coordinates(L.column(i))[j]
 
         output = self.module.zero()
 
         for w in subspace_A:
-            output = output + output_matrix[subspace_A.index(w),0]*self.module.monomial(w)
+            output = output + (P^-1*vector(image.coordinates(element_to_matrix.column(0))))[subspace_A.index(w)]*self.module.monomial(w)
 
         return output
 
