@@ -224,20 +224,52 @@ class CohomologyPartialFlagVariety:
 
         return output
 
+
+
+    def is_coadjoint(self):
+
+        assert self.root_system.cartan_type().rank() > 1, 'Rank 1 Dynkin types are not allowed'
+
+        assert self.root_system.cartan_type() not in [CartanType('D2'), CartanType('D3')], 'Dynkin types D2 and D3 are not allowed'
+
+        n = self.root_system.cartan_type().rank()
+
+        # list of coadjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D3)
+        coadjoint = [['A', n, (1, n)], ['B', n, (1,)], ['C', n, (2,)], ['D', n, (2,)], ['E', 6, (2,)], ['E', 7, (1,)], ['E', 8, (8,)], ['F', 4, (4,)], ['G', 2, (2,)]]
+
+        return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in coadjoint
+
+
+    def is_adjoint(self):
+
+        assert self.root_system.cartan_type().rank() > 1, 'Rank 1 Dynkin types are not allowed'
+
+        assert self.root_system.cartan_type() not in [CartanType('D2'), CartanType('D3')], 'Dynkin types D2 and D3 are not allowed'
+
+        n = self.root_system.cartan_type().rank()
+
+        # list of adjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D3)
+        adjoint = [['A', n, (1, n)], ['B', n, (2,)], ['C', n, (1,)], ['D', n, (2,)], ['E', 6, (2,)], ['E', 7, (1,)], ['E', 8, (8,)], ['F', 4, (1,)], ['G', 2, (1,)]]
+
+        return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in adjoint
+
+    # for coadjoint varieties one can reindex Schubert classes by short roots
     def schubert_to_roots(self, input):
 
-        # check input, either an element of the schubert basis or a root
+        assert self.is_coadjoint(), 'This variety is not coadjoint. There is no bijection between Schubert classes and short roots.'
+        assert input in self.schubert_basis or input in self.root_lattice.roots(), 'Input must be either an element of schubert_basis or a root'
 
-        # make sure it is simly laced and adjoint variety
+        # defining the highest short root \theta
+        short_roots = self.root_lattice.root_poset().subposet([root for root in self.root_lattice.short_roots() if root in self.root_lattice.positive_roots()])
+        theta = short_roots.unwrap(short_roots.top())
 
-        theta = self.root_lattice.highest_root()
         schubert_to_roots = dict([tuple([w,w.action(theta)]) for w in self.schubert_basis])
         roots_to_schubert = dict([tuple([w.action(theta),w]) for w in self.schubert_basis])
 
         if input in self.schubert_basis:
             return schubert_to_roots.get(input)
 
-        if input in self.root_lattice:
+        if input in self.root_lattice.roots():
             return roots_to_schubert.get(input)
 
     def to_roots(self, element):
