@@ -206,7 +206,7 @@ class CohomologyPartialFlagVariety:
 
     def poincare_dual(self, element):
 
-        # check input
+        assert element in self.module, 'Input must be an element of the cohomology module'
 
         # if element is zero we are done
         if element.is_zero():
@@ -217,13 +217,9 @@ class CohomologyPartialFlagVariety:
             term = element.leading_term()
             return self.poincare_dual(term) + self.poincare_dual(element - term)
 
-        for w in self.schubert_basis:
-            if w.length() == self.dimension - element.leading_support().length():
-                if self.cup_product(element.leading_monomial(), self.module.monomial(w)) == self.point_class:
-                    output = element.leading_coefficient()*self.module.monomial(w)
-
-        return output
-
+        # if element consists of just one monomial, we use the explicit formula
+        # for the Weyl group element defining the Poincare dual
+        return element.leading_coefficient()*self.module.monomial((self.weyl_group.long_element()*element.leading_support()).coset_representative(self.nonparabolic))
 
 
     def is_coadjoint(self):
