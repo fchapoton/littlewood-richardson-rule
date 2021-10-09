@@ -292,12 +292,21 @@ class CohomologyPartialFlagVariety:
     # for coadjoint varieties one can reindex Schubert classes by short roots
     def schubert_to_roots(self, input):
 
-        assert self.is_coadjoint(), 'This variety is not coadjoint. There is no bijection between Schubert classes and short roots.'
+        assert self.is_coadjoint() or self.is_adjoint(), 'This variety is neither adjoint nor coadjoint. There is no bijection between Schubert classes and (short/long) short roots.'
         assert input in self.schubert_basis or input in self.root_lattice.roots(), 'Input must be either an element of schubert_basis or a root'
 
         # defining the highest short root \theta
         short_roots = self.root_lattice.root_poset().subposet([root for root in self.root_lattice.short_roots() if root in self.root_lattice.positive_roots()])
         theta = short_roots.unwrap(short_roots.top())
+
+        if self.is_adjoint():
+            # taking theta to be the highest root
+            theta = self.root_lattice.highest_root()
+
+        if self.is_coadjoint() and not self.is_adjoint():
+            # taking theta to be the highest short root
+            short_roots = self.root_lattice.root_poset().subposet([root for root in self.root_lattice.short_roots() if root in self.root_lattice.positive_roots()])
+            theta = short_roots.unwrap(short_roots.top())
 
         schubert_to_roots = dict([tuple([w,w.action(theta)]) for w in self.schubert_basis])
         roots_to_schubert = dict([tuple([w.action(theta),w]) for w in self.schubert_basis])
