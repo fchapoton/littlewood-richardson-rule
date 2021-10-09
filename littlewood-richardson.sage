@@ -49,12 +49,12 @@ class CohomologyPartialFlagVariety:
         # if element_one is a sum of at least two monomials we recurse
         if len(element_one.monomials()) > 1:
             term_one = element_one.leading_term()
-            return self.cup_product_new(term_one, element_two) + self.cup_product_new(element_one - term_one, element_two)
+            return self.cup_product(term_one, element_two) + self.cup_product(element_one - term_one, element_two)
 
         # if element_two is a sum of at least two monomials we recurse
         if len(element_two.monomials()) > 1:
             term_two = element_two.leading_term()
-            return self.cup_product_new(element_one, term_two) + self.cup_product_new(element_one, element_two - term_two)
+            return self.cup_product(element_one, term_two) + self.cup_product(element_one, element_two - term_two)
 
         # now we can apply the Littlewood-Richardson rule
         a = element_one.leading_support()
