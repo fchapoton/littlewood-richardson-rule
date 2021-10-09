@@ -62,15 +62,10 @@ class CohomologyPartialFlagVariety:
 
         output = self.module.zero()
 
-        if style == 'chaput-perrin':
             for c in self.schubert_basis:
                 if c.length() == a.length() + b.length():
-                    output = output + self.lrcoeff(a, b, c, style = 'chaput-perrin')*self.module(c)
+                output = output + self.lrcoeff(a, b, c, style)*self.module(c)
 
-        if style == 'thomas-yong':
-            for c in self.schubert_basis:
-                if c.length() == a.length() + b.length():
-                    output = output + self.lrcoeff(a, b, c, style = 'thomas-yong')*self.module(c)
 
         return element_one.leading_coefficient()*element_two.leading_coefficient()*output
 
