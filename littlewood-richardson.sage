@@ -40,143 +40,7 @@ class CohomologyPartialFlagVariety:
                 (self.root_system.cartan_type(), self.parabolic, self.root_system.dynkin_diagram())
 
 
-    def cup_product(self, element_one, element_two):
-
-        # check if the algorithm is applicable (cominusculity) !!!
-        # check input
-
-        nonparabolic_positive_roots = self.root_lattice.nonparabolic_positive_roots(self.nonparabolic)
-
-        LambdaGP = self.root_lattice.root_poset().subposet(nonparabolic_positive_roots)
-
-        straight_shapes = [w.inversions(inversion_type = 'roots') for w in self.schubert_basis]
-
-        # Straight shapes, as defined above, are subsets of the set of positive roots. We store them as lists.
-        # In fact they are subsets of LambdaGP!
-        # A skew shape is a set-theoretic difference of straight shapes. We store them as lists as well.
-        # A standard filling of a (skew) shape, as in Thomas-Yong, is a bijective labelling of the elements of
-        # shape by number 1, 2, 3, ... compatible with the partial order on LambdaGP.
-        # These labelled skew shapes are called standard tableaux.
-        # To work with such labellings, i.e. with standard tableaux, we proceed as follows:
-        # Every standard tableau is stored in a dictionary, whose keys are always LambdaGP.
-        # The labelling is extended to the whole LambdaGP by zero values
-
-
-        # given a dictionary as described above (defining a standard tableau),
-        # we want to get back the skew shape, i.e. throw away keys with zero values
-        def skew_shape(T):
-
-            # check input (input should be a dictionary with keys in LambdaGP)
-
-            return [alpha for alpha in T.keys() if T.get(alpha) != 0]
-
-
-        # given a standard tableau T, need to find the boxes that can be used in the Jeu De Taquin
-        def list_of_allowed_x(T):
-
-            # check input (input should be a dictionary with keys in LambdaGP)
-
-            output = []
-
-            for alpha in skew_shape(T):
-                for beta in LambdaGP.lower_covers(alpha):
-                    if LambdaGP.unwrap(beta) not in skew_shape(T):
-                        if LambdaGP.unwrap(beta) not in output:
-                            output.append(LambdaGP.unwrap(beta))
-
-            return output
-
-
-        # jeu de taquin slide of T into x
-        # this process takes several steps (page 3 in the preprint)
-        def jeu_de_taquin(T,x):
-
-            assert x in list_of_allowed_x(T), 'not allowed x in jdt'
-
-            output = T.copy()
-
-            candidates_for_y = [alpha for alpha in skew_shape(T) if alpha in [LambdaGP.unwrap(beta) for beta in LambdaGP.upper_covers(x)]]
-
-            while len(candidates_for_y) > 0:
-                # taking as new y the element with the minimal label (as on page 3 of [Thomas-Yong])
-                inverted_filling = {value: key for key, value in T.items()}
-                y = inverted_filling.get(min([T.get(alpha) for alpha in candidates_for_y]))
-
-                output.update({x : output.get(y)})
-                output.update({y : 0})
-
-                x = y
-
-                candidates_for_y = [alpha for alpha in skew_shape(T) if alpha in [LambdaGP.unwrap(beta) for beta in LambdaGP.upper_covers(x)]]
-
-            return output
-
-
-        # checking if the undelying skew shape is straight
-        def is_straight_shape(T):
-
-            for shape in straight_shapes:
-                if set(shape) == set(skew_shape(T)):
-                    return True
-
-            else: return False
-
-
-        # if the undelying skew shape is straight, returning this straight shape
-        def straight_shape(T):
-
-            assert is_straight_shape(T), 'T is not of straight shape'
-
-            for shape in straight_shapes:
-                if set(shape) == set(skew_shape(T)):
-                    return shape
-
-
-        def rectification(T):
-
-            if is_straight_shape(T) == True:
-                return T
-
-            else: return rectification(jeu_de_taquin(T,list_of_allowed_x(T)[-1]))
-
-
-        def standard_tableaux(S):
-
-            output = []
-
-            TT = dict([tuple([alpha,0]) for alpha in nonparabolic_positive_roots])
-
-            for item in LambdaGP.subposet(S).linear_extensions():
-                # for i in range(len(S)):
-                T = dict([tuple([item.to_poset().unwrap(item[i]), i+1]) for i in range(len(S))])
-                TT.update(T)
-                output.append(TT.copy())
-            return output
-
-
-        # Computes the Littlewood--Richardson coefficient c_{\lambda, \mu}^{\nu} using
-        # the Main Theorem (on page 4) of [Thomas-Yong]. As input we give straight_shapes
-        # \lambda, \mu, \nu (denoted by L, M, N respectively).
-        def lrcoeff(L,M,N):
-
-            assert L in straight_shapes
-            assert M in straight_shapes
-            assert N in straight_shapes
-
-            result = 0
-
-            if set(L).issubset(set(N)):
-
-                # fixing the standard tableau T_{\mu} of shape \mu (as in the Theorem)
-                Tmu = standard_tableaux(M)[0]
-                # print(Tmu)
-
-                # looping over the standard tableaux of shape \nu/\lambda
-                for S in standard_tableaux([alpha for alpha in N if alpha not in L]):
-                    if rectification(S) == Tmu: result = result + 1
-
-            return result
-
+    def cup_product(self, element_one, element_two, style = 'chaput-perrin'):
 
         # if element_one or element_two is zero we are done
         if element_one.is_zero() or element_two.is_zero():
@@ -185,12 +49,12 @@ class CohomologyPartialFlagVariety:
         # if element_one is a sum of at least two monomials we recurse
         if len(element_one.monomials()) > 1:
             term_one = element_one.leading_term()
-            return self.cup_product(term_one, element_two) + self.cup_product(element_one - term_one, element_two)
+            return self.cup_product_new(term_one, element_two) + self.cup_product_new(element_one - term_one, element_two)
 
         # if element_two is a sum of at least two monomials we recurse
         if len(element_two.monomials()) > 1:
             term_two = element_two.leading_term()
-            return self.cup_product(element_one, term_two) + self.cup_product(element_one, element_two - term_two)
+            return self.cup_product_new(element_one, term_two) + self.cup_product_new(element_one, element_two - term_two)
 
         # now we can apply the Littlewood-Richardson rule
         a = element_one.leading_support()
@@ -198,11 +62,187 @@ class CohomologyPartialFlagVariety:
 
         output = self.module.zero()
 
-        for c in self.schubert_basis:
-            if c.length() == a.length() + b.length():
-                output = output + lrcoeff(a.inversions(inversion_type = 'roots'), b.inversions(inversion_type = 'roots'), c.inversions(inversion_type = 'roots'))*self.module(c)
+        if style == 'chaput-perrin':
+            for c in self.schubert_basis:
+                if c.length() == a.length() + b.length():
+                    output = output + self.lrcoeff(a, b, c, style = 'chaput-perrin')*self.module(c)
+
+        if style == 'thomas-yong':
+            for c in self.schubert_basis:
+                if c.length() == a.length() + b.length():
+                    output = output + self.lrcoeff(a, b, c, style = 'thomas-yong')*self.module(c)
 
         return element_one.leading_coefficient()*element_two.leading_coefficient()*output
+
+    def lrcoeff(self, u, v, w, style = 'chaput-perrin'):
+
+        assert all([u in self.schubert_basis, v in self.schubert_basis, w in self.schubert_basis]), 'Input must be an element of self.schubert_basis'
+        assert self.is_minuscule(w), 'w in lrcoeff(u,v,w) must be minuscule'
+
+        if all([u.bruhat_le(w), v.bruhat_le(w)]) == False:
+            return 0
+
+        else:
+
+            if style == 'chaput-perrin':
+
+                # fix a reduced word for w
+                reduced_word_w = w.reduced_word() # DO WE REALLY NEED THIS?
+
+                elements = list(range(w.length()))
+                relations = [[i,j] for i in range(w.length()) for j in range(w.length()) if i > j and self.weyl_group.coxeter_matrix()[reduced_word_w[i],reduced_word_w[j]] != 2]
+
+                ambient_poset = Poset([elements, relations], facade = False)
+
+                straight_shapes = []
+
+                for ideal in ambient_poset.order_ideals_lattice():
+                    straight_shapes.append([ambient_poset.unwrap(item) for item in list(ambient_poset.order_ideals_lattice().unwrap(ideal))])
+
+                ideal_to_schubert = dict([tuple([ambient_poset.subposet(shape), self.weyl_group.from_reduced_word([reduced_word_w[ambient_poset.unwrap(i)] for i in ambient_poset.subposet(shape).dual().list()])]) for shape in straight_shapes])
+                schubert_to_ideal = dict([tuple([self.weyl_group.from_reduced_word([reduced_word_w[ambient_poset.unwrap(i)] for i in ambient_poset.subposet(shape).dual().list()]), ambient_poset.subposet(shape)]) for shape in straight_shapes])
+
+            if style == 'thomas-yong':
+
+                ambient_poset = self.root_lattice.root_poset().subposet(self.root_lattice.nonparabolic_positive_roots(self.nonparabolic))
+
+                straight_shapes = [w.inversions(inversion_type = 'roots') for w in self.schubert_basis]
+
+            def schubert_to_shape(u):
+
+                assert u in self.schubert_basis
+
+                if style == 'chaput-perrin':
+                    return [ambient_poset.unwrap(item) for item in schubert_to_ideal.get(u).list()]
+
+                if style == 'thomas-yong':
+                    return u.inversions(inversion_type = 'roots')
+
+
+            # A skew shape is a set-theoretic difference of straight shapes. We
+            # store them as lists as well. A standard filling of a skew shape is
+            # a bijective labelling of its elements by the numbers 1, 2, 3, ...
+            # compatible with the partial order on the ambient_poset. These labelled
+            # skew shapes are called standard tableaux. To work with such labellings,
+            # i.e. with standard tableaux, we proceed as follows: every standard tableau
+            # is stored as a dictionary, whose keys are all the elements of the ambient_poset,
+            # where the labelling is extended to the whole ambient_poset by zero values.
+            def skew_shape(T):
+
+                # check input (input should be a dictionary with keys in ambient_poset)
+
+                return [u for u in T.keys() if T.get(u) != 0]
+
+            # given a standard tableau T, need to find the boxes that can be used in the Jeu De Taquin
+            def list_of_allowed_x(T):
+
+                # check input (input should be a dictionary with keys in ambient_poset)
+
+                candidates = []
+
+                for alpha in skew_shape(T):
+                    for beta in ambient_poset.lower_covers(alpha):
+                        if ambient_poset.unwrap(beta) not in skew_shape(T):
+                            if ambient_poset.unwrap(beta) not in candidates:
+                                candidates.append(ambient_poset.unwrap(beta))
+
+                return [ambient_poset.unwrap(item) for item in ambient_poset.subposet(candidates).maximal_elements()]
+
+
+            # jeu de taquin slide of T into x
+            # this process takes several steps (page 3 in the preprint)
+            def jeu_de_taquin(T,x):
+
+                assert x in list_of_allowed_x(T), 'not allowed x in jdt'
+
+                output = T.copy()
+
+                candidates_for_y = [alpha for alpha in skew_shape(T) if alpha in [ambient_poset.unwrap(beta) for beta in ambient_poset.upper_covers(x)]]
+
+                while len(candidates_for_y) > 0:
+                    # taking as new y the element with the minimal label (as on page 3 of [Thomas-Yong])
+                    inverted_filling = {value: key for key, value in T.items()}
+                    y = inverted_filling.get(min([T.get(alpha) for alpha in candidates_for_y]))
+
+                    output.update({x : output.get(y)})
+                    output.update({y : 0})
+
+                    assert output in standard_tableaux(skew_shape(output)), 'NOT a standard tableau'
+
+                    x = y
+
+                    candidates_for_y = [alpha for alpha in skew_shape(output) if alpha in [ambient_poset.unwrap(beta) for beta in ambient_poset.upper_covers(x)]]
+
+                return output
+
+
+            # checking if the undelying skew shape is straight
+            def is_straight_shape(T):
+
+                for shape in straight_shapes:
+                    if set(shape) == set(skew_shape(T)):
+                        return True
+
+                else: return False
+
+
+            # if the undelying skew shape is straight, returning this straight shape
+            def straight_shape(T):
+
+                assert is_straight_shape(T), 'T is not of straight shape'
+
+                for shape in straight_shapes:
+                    if set(shape) == set(skew_shape(T)):
+                        return shape
+
+
+            def rectification(T):
+
+                assert T in standard_tableaux(skew_shape(T)), 'NOT a standard tableau'
+
+                if is_straight_shape(T) == True:
+                    return T
+
+                else:
+                    return rectification(jeu_de_taquin(T,list_of_allowed_x(T)[-1]))
+
+
+            def standard_tableaux(S):
+
+                output = []
+
+                TT = dict([tuple([alpha,0]) for alpha in [ambient_poset.unwrap(item) for item in ambient_poset.list()]])
+
+                for item in ambient_poset.subposet(S).linear_extensions():
+                    T = dict([tuple([item.to_poset().unwrap(item[i]), i+1]) for i in range(len(S))])
+                    TT.update(T)
+                    output.append(TT.copy())
+                return output
+
+
+            # Here we are starting to compute the LR coefficient
+            result = 0
+
+            # fixing the standard tableau Tv of shape schubert_to_shape(v)
+            Tv = standard_tableaux(schubert_to_shape(v))[0]
+
+            # looping over the standard tableaux of shape schubert_to_shape(v)\schubert_to_shape(u)
+            for S in standard_tableaux([alpha for alpha in schubert_to_shape(w) if alpha not in schubert_to_shape(u)]):
+                if rectification(S) == Tv:
+                    result = result + 1
+
+            return result
+
+
+    def is_minuscule(self, w):
+
+        assert w in self.schubert_basis
+
+        word = w.reduced_word()
+        weight = self.root_system.weight_lattice().fundamental_weight(self.parabolic[0])
+
+        return all(self.root_system.weight_lattice().weyl_group().from_reduced_word(word[i:]).action(weight) == self.root_system.weight_lattice().weyl_group().from_reduced_word(word[i+1:]).action(weight) - self.root_system.weight_lattice().simple_root(word[i]) for i in range(len(word)))
+
 
     def poincare_dual(self, element):
 
