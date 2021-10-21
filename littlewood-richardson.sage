@@ -284,6 +284,35 @@ class CohomologyPartialFlagVariety:
 
         return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in adjoint
 
+    def is_minuscule(self):
+
+        assert self.root_system.cartan_type().rank() > 1, 'Rank 1 Dynkin types are not allowed'
+
+        assert self.root_system.cartan_type() not in [CartanType('D2'), CartanType('D3')], 'Dynkin types D2 and D3 are not allowed'
+
+        n = self.root_system.cartan_type().rank()
+
+        # list of minuscule varieties (assuming the rank n >= 2 and the Dynkin type is not D2 or D3)
+        minuscule = [['A', n, (i,)] for i in range(1,n+1)] + [['B', n, (n,)], ['C', n, (1,)], ['D', n, (1,)], ['D', n, (n-1,)], ['D', n, (n,)], ['E', 6, (1,)], ['E', 6, (6,)], ['E', 7, (7,)]]
+
+        return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in minuscule
+
+
+    def is_cominuscule(self):
+
+        assert self.root_system.cartan_type().rank() > 1, 'Rank 1 Dynkin types are not allowed'
+
+        assert self.root_system.cartan_type() not in [CartanType('D2'), CartanType('D3')], 'Dynkin types D2 and D3 are not allowed'
+
+        n = self.root_system.cartan_type().rank()
+
+        # list of minuscule varieties (assuming the rank n >= 2 and the Dynkin type is not D2 or D3)
+        cominuscule = [['A', n, (i,)] for i in range(1,n+1)] + [['B', n, (1,)], ['C', n, (n,)], ['D', n, (1,)], ['D', n, (n-1,)], ['D', n, (n,)], ['E', 6, (1,)], ['E', 6, (6,)], ['E', 7, (7,)]]
+
+        return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in cominuscule
+
+
+
     # for coadjoint varieties one can reindex Schubert classes by short roots
     def schubert_to_roots(self, input):
 
