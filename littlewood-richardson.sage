@@ -231,7 +231,7 @@ class CohomologyPartialFlagVariety:
             return result
 
 
-    def is_minuscule(self, w):
+    def is_minuscule_element(self, w):
 
         assert w in self.schubert_basis
 
