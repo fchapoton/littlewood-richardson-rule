@@ -40,7 +40,7 @@ class CohomologyPartialFlagVariety:
                 (self.root_system.cartan_type(), self.parabolic, self.root_system.dynkin_diagram())
 
 
-    def cup_product(self, element_one, element_two, style = 'chaput-perrin'):
+    def cup_product(self, element_one, element_two, style = 'chaput-perrin', doublecheck = False):
 
         # if element_one or element_two is zero we are done
         if element_one.is_zero() or element_two.is_zero():
@@ -49,12 +49,12 @@ class CohomologyPartialFlagVariety:
         # if element_one is a sum of at least two monomials we recurse
         if len(element_one.monomials()) > 1:
             term_one = element_one.leading_term()
-            return self.cup_product(term_one, element_two) + self.cup_product(element_one - term_one, element_two)
+            return self.cup_product(term_one, element_two, style, doublecheck) + self.cup_product(element_one - term_one, element_two, style, doublecheck)
 
         # if element_two is a sum of at least two monomials we recurse
         if len(element_two.monomials()) > 1:
             term_two = element_two.leading_term()
-            return self.cup_product(element_one, term_two) + self.cup_product(element_one, element_two - term_two)
+            return self.cup_product(element_one, term_two, style, doublecheck) + self.cup_product(element_one, element_two - term_two, style, doublecheck)
 
         # now we can apply the Littlewood-Richardson rule
         a = element_one.leading_support()
@@ -64,15 +64,15 @@ class CohomologyPartialFlagVariety:
 
             for c in self.schubert_basis:
                 if c.length() == a.length() + b.length():
-                output = output + self.lrcoeff(a, b, c, style)*self.module(c)
+                output = output + self.lrcoeff(a, b, c, style, doublecheck)*self.module(c)
 
 
         return element_one.leading_coefficient()*element_two.leading_coefficient()*output
 
-    def lrcoeff(self, u, v, w, style = 'chaput-perrin'):
+    def lrcoeff(self, u, v, w, style = 'chaput-perrin', doublecheck = False):
 
         assert all([u in self.schubert_basis, v in self.schubert_basis, w in self.schubert_basis]), 'Input must be an element of self.schubert_basis'
-        assert self.is_minuscule(w), 'w in lrcoeff(u,v,w) must be minuscule'
+        assert self.is_minuscule_element(w), 'w in lrcoeff(u,v,w) must be minuscule'
 
         if all([u.bruhat_le(w), v.bruhat_le(w)]) == False:
             return 0
@@ -162,6 +162,7 @@ class CohomologyPartialFlagVariety:
                     output.update({x : output.get(y)})
                     output.update({y : 0})
 
+                    if doublecheck:
                     assert output in standard_tableaux(skew_shape(output)), 'NOT a standard tableau'
 
                     x = y
@@ -193,6 +194,7 @@ class CohomologyPartialFlagVariety:
 
             def rectification(T):
 
+                if doublecheck:
                 assert T in standard_tableaux(skew_shape(T)), 'NOT a standard tableau'
 
                 if is_straight_shape(T) == True:
@@ -370,7 +372,7 @@ class CohomologyPartialFlagVariety:
     # computing the preimage under the multiplication by the hyperplane class
     # input must be homogeneous
     # only maximal parabolics are allowed at the moment
-    def inverse_lefschetz_map(self, element):
+    def inverse_lefschetz_map(self, element, style = 'chaput-perrin', doublecheck = False):
 
         assert len(self.parabolic) == 1, 'The parabolic subgroup is not maximal'
 
@@ -388,7 +390,7 @@ class CohomologyPartialFlagVariety:
         assert L.right_kernel().dimension() != 0, 'Multiplication by the hyperplane class has non-trivial kernel'
 
         for w in subspace_A:
-            product = self.cup_product(self.module.monomial(w), hyperplane_class)
+            product = self.cup_product(self.module.monomial(w), hyperplane_class, style, doublecheck)
             for v in subspace_B:
                 L[subspace_B.index(v), subspace_A.index(w)] = product.monomial_coefficients().get(v)
 
