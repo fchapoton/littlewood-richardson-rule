@@ -265,7 +265,7 @@ class CohomologyPartialFlagVariety:
 
         n = self.root_system.cartan_type().rank()
 
-        # list of coadjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D3)
+        # list of coadjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D2 or D3)
         coadjoint = [['A', n, (1, n)], ['B', n, (1,)], ['C', n, (2,)], ['D', n, (2,)], ['E', 6, (2,)], ['E', 7, (1,)], ['E', 8, (8,)], ['F', 4, (4,)], ['G', 2, (2,)]]
 
         return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in coadjoint
@@ -279,7 +279,7 @@ class CohomologyPartialFlagVariety:
 
         n = self.root_system.cartan_type().rank()
 
-        # list of adjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D3)
+        # list of adjoint varieties (assuming the rank n >= 2 and the Dynkin type is not D2 or D3)
         adjoint = [['A', n, (1, n)], ['B', n, (2,)], ['C', n, (1,)], ['D', n, (2,)], ['E', 6, (2,)], ['E', 7, (1,)], ['E', 8, (8,)], ['F', 4, (1,)], ['G', 2, (1,)]]
 
         return [self.root_system.cartan_type().type(), self.root_system.cartan_type().rank(), self.parabolic] in adjoint
