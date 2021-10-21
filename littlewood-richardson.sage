@@ -240,6 +240,42 @@ class CohomologyPartialFlagVariety:
 
         return all(self.root_system.weight_lattice().weyl_group().from_reduced_word(word[i:]).action(weight) == self.root_system.weight_lattice().weyl_group().from_reduced_word(word[i+1:]).action(weight) - self.root_system.weight_lattice().simple_root(word[i]) for i in range(len(word)))
 
+    def is_cominuscule_element(self, w):
+
+        assert w in self.schubert_basis
+
+        word = w.reduced_word()
+
+        if self.root_system.cartan_type().type() == 'C':
+            L = RootSystem(['B', self.root_system.cartan_type().rank()]).weight_lattice()
+            weight = L.fundamental_weight(self.parabolic[0])
+
+            return all(L.weyl_group().from_reduced_word(word[i:]).action(weight) == L.weyl_group().from_reduced_word(word[i+1:]).action(weight) - L.simple_root(word[i]) for i in range(len(word)))
+
+        if self.root_system.cartan_type().type() == 'B':
+            L = RootSystem(['C', self.root_system.cartan_type().rank()]).weight_lattice()
+            weight = L.fundamental_weight(self.parabolic[0])
+
+            return all(L.weyl_group().from_reduced_word(word[i:]).action(weight) == L.weyl_group().from_reduced_word(word[i+1:]).action(weight) - L.simple_root(word[i]) for i in range(len(word)))
+
+        if self.root_system.cartan_type().type() == 'F':
+            L = RootSystem(['F', self.root_system.cartan_type().rank()]).weight_lattice()
+            weight = L.fundamental_weight(5 - self.parabolic[0])
+
+            newword = [5-i for i in word]
+
+            return all(L.weyl_group().from_reduced_word(newword[i:]).action(weight) == L.weyl_group().from_reduced_word(newword[i+1:]).action(weight) - L.simple_root(newword[i]) for i in range(len(newword)))
+
+        if self.root_system.cartan_type().type() == 'G':
+            L = RootSystem(['G', self.root_system.cartan_type().rank()]).weight_lattice()
+            weight = L.fundamental_weight(3 - self.parabolic[0])
+
+            newword = [3-i for i in word]
+
+            return all(L.weyl_group().from_reduced_word(newword[i:]).action(weight) == L.weyl_group().from_reduced_word(newword[i+1:]).action(weight) - L.simple_root(newword[i]) for i in range(len(newword)))
+
+        return self.is_minuscule_element(w)
+
 
     def poincare_dual(self, element):
 
