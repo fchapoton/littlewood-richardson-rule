@@ -72,7 +72,10 @@ class CohomologyPartialFlagVariety:
     def lrcoeff(self, u, v, w, style = 'chaput-perrin', doublecheck = False):
 
         assert all([u in self.schubert_basis, v in self.schubert_basis, w in self.schubert_basis]), 'Input must be an element of self.schubert_basis'
-        assert self.is_minuscule_element(w), 'w in lrcoeff(u,v,w) must be minuscule'
+        if style == 'thomas-yong':
+            assert self.is_minuscule() or self.is_cominuscule(), 'The homogeneous space is not (co)minuscule'
+        if style == 'chaput-perrin':
+            assert self.is_minuscule_element(w) or self.is_cominuscule_element(w), 'w in lrcoeff(u,v,w) must be (co)minuscule'
 
         if all([u.bruhat_le(w), v.bruhat_le(w)]) == False:
             return 0
