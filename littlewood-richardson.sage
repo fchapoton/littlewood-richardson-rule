@@ -166,7 +166,7 @@ class CohomologyPartialFlagVariety:
                     output.update({y : 0})
 
                     if doublecheck:
-                    assert output in standard_tableaux(skew_shape(output)), 'NOT a standard tableau'
+                        assert output in standard_tableaux(skew_shape(output)), 'NOT a standard tableau'
 
                     x = y
 
@@ -198,7 +198,7 @@ class CohomologyPartialFlagVariety:
             def rectification(T):
 
                 if doublecheck:
-                assert T in standard_tableaux(skew_shape(T)), 'NOT a standard tableau'
+                    assert T in standard_tableaux(skew_shape(T)), 'NOT a standard tableau'
 
                 if is_straight_shape(T) == True:
                     return T
