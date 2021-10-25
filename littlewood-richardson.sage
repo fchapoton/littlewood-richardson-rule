@@ -62,8 +62,8 @@ class CohomologyPartialFlagVariety:
 
         output = self.module.zero()
 
-            for c in self.schubert_basis:
-                if c.length() == a.length() + b.length():
+        for c in self.schubert_basis:
+            if c.length() == a.length() + b.length():
                 output = output + self.lrcoeff(a, b, c, style, doublecheck)*self.module(c)
 
 
