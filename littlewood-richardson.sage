@@ -102,9 +102,17 @@ class CohomologyPartialFlagVariety:
 
             if style == 'thomas-yong':
 
+                if self.is_cominuscule():
                 ambient_poset = self.root_lattice.root_poset().subposet(self.root_lattice.nonparabolic_positive_roots(self.nonparabolic))
 
                 straight_shapes = [w.inversions(inversion_type = 'roots') for w in self.schubert_basis]
+
+                else:
+                    # this is needed in the minuscule case for non-simply Dynkin types
+                    ambient_poset = self.root_system.coroot_lattice().root_poset().subposet(self.root_system.coroot_lattice().nonparabolic_positive_roots(self.nonparabolic))
+
+                    straight_shapes = [w.inversions(inversion_type = 'coroots') for w in self.schubert_basis]
+
 
             def schubert_to_shape(u):
 
@@ -114,7 +122,10 @@ class CohomologyPartialFlagVariety:
                     return [ambient_poset.unwrap(item) for item in schubert_to_ideal.get(u).list()]
 
                 if style == 'thomas-yong':
+                    if self.is_cominuscule():
                     return u.inversions(inversion_type = 'roots')
+                    else:
+                        return u.inversions(inversion_type = 'coroots')
 
 
             # A skew shape is a set-theoretic difference of straight shapes. We
