@@ -242,7 +242,49 @@ class CohomologyPartialFlagVariety:
                 if rectification(S) == Tv:
                     result = result + 1
 
-            return result
+            extrafactor = 1
+
+            if style == 'thomas-yong' and self.is_cominuscule():
+
+                def shortroots(S):
+                    return len([alpha for alpha in S if alpha.is_short_root()])
+
+                extrafactor = 2^(shortroots([alpha for alpha in schubert_to_shape(w) if alpha not in schubert_to_shape(u)]) - shortroots(schubert_to_shape(v)))
+
+            if style == 'chaput-perrin':
+
+                def newfactor(u):
+
+                    if self.root_system.cartan_type().is_simply_laced():
+                        return 1
+
+                    else:
+
+                        # fix a reduced word for u
+                        reduced_word_u = u.reduced_word() # DO WE REALLY NEED THIS EXPLICIT FIX?
+
+                        elements = list(range(u.length()))
+                        relations = [[i,j] for i in range(u.length()) for j in range(u.length()) if i > j and self.weyl_group.coxeter_matrix()[reduced_word_u[i],reduced_word_u[j]] != 2]
+
+                        ambient_poset = Poset([elements, relations], facade = False)
+
+                        weight = self.root_system.weight_lattice().fundamental_weight(self.parabolic[0]) # this is denoted $\Lambda$ in [Chaput-Perrin, Definition 2.12]
+
+                        output = 1
+
+                        for i in ambient_poset.list():
+                            beta = self.root_system.weight_lattice().simple_root(reduced_word_u[ambient_poset.unwrap(i)]) # this is denoted $\alpha_i$ in [Chaput-Perrin, Definition 2.12]
+                            for alpha in [a for a in self.root_system.weight_lattice().simple_roots() if weight.to_ambient().inner_product(a.to_ambient()) > 0]:
+                                occurences_of_alpha = [index for index,reflection in enumerate(reduced_word_u) if self.root_system.weight_lattice().simple_root(reflection) == alpha]
+                                if alpha.to_ambient().inner_product(alpha.to_ambient()) > beta.to_ambient().inner_product(beta.to_ambient()):
+                                    if ambient_poset.is_gequal(i,occurences_of_alpha[-1]): # occurences_of_alpha[-1] is denoted $(\alpha, 1)$ in [Chaput-Perrin, Definition 2.12]
+                                        output = output * (alpha.to_ambient().inner_product(alpha.to_ambient())/beta.to_ambient().inner_product(beta.to_ambient()))
+
+                        return output
+
+                extrafactor = newfactor(w)/(newfactor(u)*newfactor(v))
+
+            return result*extrafactor
 
 
     def is_minuscule_element(self, w):
