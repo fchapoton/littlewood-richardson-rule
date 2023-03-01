@@ -71,13 +71,13 @@ class CohomologyPartialFlagVariety:
 
     def lrcoeff(self, u, v, w, style = 'chaput-perrin', doublecheck = False):
 
-        assert all([u in self.schubert_basis, v in self.schubert_basis, w in self.schubert_basis]), 'Input must be an element of self.schubert_basis'
+        assert all(u in self.schubert_basis, v in self.schubert_basis, w in self.schubert_basis), 'Input must be an element of self.schubert_basis'
         if style == 'thomas-yong':
             assert self.is_minuscule() or self.is_cominuscule(), 'The homogeneous space is not (co)minuscule'
         if style == 'chaput-perrin':
             assert self.is_minuscule_element(w) or self.is_cominuscule_element(w), 'w in lrcoeff(u,v,w) must be (co)minuscule'
 
-        if all([u.bruhat_le(w), v.bruhat_le(w)]) == False:
+        if not all([u.bruhat_le(w), v.bruhat_le(w)]):
             return 0
 
         else:
@@ -168,7 +168,7 @@ class CohomologyPartialFlagVariety:
 
                 candidates_for_y = [alpha for alpha in skew_shape(T) if alpha in [ambient_poset.unwrap(beta) for beta in ambient_poset.upper_covers(x)]]
 
-                while len(candidates_for_y) > 0:
+                while candidates_for_y:
                     # taking as new y the element with the minimal label (as on page 3 of [Thomas-Yong])
                     inverted_filling = {value: key for key, value in T.items()}
                     y = inverted_filling.get(min([T.get(alpha) for alpha in candidates_for_y]))
@@ -249,7 +249,7 @@ class CohomologyPartialFlagVariety:
                 def shortroots(S):
                     return len([alpha for alpha in S if alpha.is_short_root()])
 
-                extrafactor = 2^(shortroots([alpha for alpha in schubert_to_shape(w) if alpha not in schubert_to_shape(u)]) - shortroots(schubert_to_shape(v)))
+                extrafactor = 2**(shortroots([alpha for alpha in schubert_to_shape(w) if alpha not in schubert_to_shape(u)]) - shortroots(schubert_to_shape(v)))
 
             if style == 'chaput-perrin':
 
@@ -436,10 +436,10 @@ class CohomologyPartialFlagVariety:
             return roots_to_schubert.get(input)
 
     def to_roots(self, element):
-
-        # check input
-        # make sure it is simly laced and adjoint variety
-
+        """
+        check input
+        make sure it is simly laced and adjoint variety
+        """
         if element.is_zero():
             return {}
 
@@ -504,7 +504,7 @@ class CohomologyPartialFlagVariety:
         output = self.module.zero()
 
         for w in subspace_A:
-            output = output + (P^-1*vector(image.coordinates(element_to_matrix.column(0))))[subspace_A.index(w)]*self.module.monomial(w)
+            output = output + (P**(-1)*vector(image.coordinates(element_to_matrix.column(0))))[subspace_A.index(w)]*self.module.monomial(w)
 
         return output
 
